@@ -11,22 +11,22 @@ restrictions.
 
 # Restrictions
 
- - Contest restrictions:
+- Contest restrictions:
 
-      Package size below 13Kb.
-      Include an index.html and when unzipped works in the browser
-      Provide two sources: minified and readable on Github
-      No server libraries (it should work offline)
-      Can use libraries but will count towards the kb limit
-      The competition theme is bad luck (NOT MANDATORY, IGNORE)
-      The competition starts at Aug 13 13:00 CEST, and finishes Sep 13 same time
-      Server category has 13k for server and 13k for client (IGNORE)
-      We need to have the rights for all content
-      New content only
-      It should run in at least one browser. The more the better
-      Bonus points for mobile support
-      Price is fixed for the team
-      Send a link to the repo and provide zipped package
+  - Package size below 13Kb.
+  - Include an index.html and when unzipped works in the browser
+  - Provide two sources: minified and readable on Github
+  - No server libraries (it should work offline)
+  - Can use libraries but will count towards the kb limit
+  - The competition theme is bad luck (NOT MANDATORY, IGNORE)
+  - The competition starts at Aug 13 13:00 CEST, and finishes Sep 13 same time
+  - Server category has 13k for server and 13k for client (IGNORE)
+  - We need to have the rights for all content
+  - New content only
+  - It should run in at least one browser. The more the better
+  - Bonus points for mobile support
+  - Price is fixed for the team
+  - Send a link to the repo and provide zipped package
 
 - Project restrictions
     - DMT program files must be the shortest possible for submitting many
