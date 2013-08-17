@@ -64,6 +64,63 @@ the games become so complex they cannot me abstracted into behaviors.
 The game should consist on
 
 - A parser
-- A game engine, with the concept of game cycle ticks
+- A game engine, with the concept of game cycle ticks, and win/lose conditions
 - A minigame language specification (instructions and values)
 - An interpreter that can execute the behaviors during the game cycle ticks
+- A game manager, that loads and executes the minigames
+
+# Black box
+
+
+    +--------------+                   start new game / game over
+    | Game Manager |<----------------------------------------------------+
+    +--------------+                                                     |
+        +                                                                |
+        |                                     Game cycle (tick)          |
+        +> launches --------> Game Engine  +-------------------+         |
+        |                       ^                              |         |
+        |                       |                              |         |
+        | +----------+          |                              |         |
+        +>|  Parser  |-------------> Entities +-> Behaviors    |         |
+          +----------+          |                     +        |         |
+                                |                     |        |         +
+                                |                     v        |    win or lose
+                                |                Interpreter +-----> condition
+                                |                              |
+                                +------------------------------+
+# Theory of operation
+
+A dmt program will consist of a small file with instructions that represent
+entities with behaviors. The set of entities and behaviors in the system is
+fixed (may be continuously expanded, but it is always limited by the engine).
+
+The screen will be a 16 x 16 pixel grid.
+
+The game engine has a game cycle, in which all the entities are refreshed in one
+tick.
+
+The game has two possible outcomes: win or lose. These states are reached with
+some of the defined behaviors, and when one of these conditions is reached, the
+game is over.
+
+An entity is defined by an initial set of pixels, and a set of behaviors.
+
+A behavior is a set of flags and instructions that the entity will execute each
+cycle update. For example, an object may have the behavior 'harmable', and upon
+contact with another entity with the behavior 'harming', the entity will perform
+some defined task. If the entity also has the behavior 'wins on destroy', and
+is destroyed, the game will be won.
+
+For the presentation as a whole game, a manager that constantly runs minimages
+is needed.
+
+# Implementation
+
+The language specification is defined in the spreadsheet with the behavior
+specification
+
+(WIP)
+
+NOTE: Since the 13k restriction implies code golfing, some of the components may
+blend or be modified to not be a unit on their own, but the behaviors must be
+there. The code will be ugly.
