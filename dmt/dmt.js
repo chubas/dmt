@@ -20,6 +20,24 @@ var length = program.length;
 
 var bgColor = colors[+program[0]];
 
+var _BEHAVIORS = [];
+
+var gameState = null; // true is win, false is lose, null is playing
+
+// Behavior return codes:
+// 1 => object dies
+
+_BEHAVIORS[0x1E] = { // hurtable
+    collide : function(other) {
+        return is(other, 0) ?  1 : null;
+    }
+};
+_BEHAVIORS[0x13] = { // Move down
+    tick : function() {
+        this.y += 1;
+    }
+};
+
 console.log("bgcolor", bgColor);
 
 ctx.fillStyle = bgColor;
@@ -52,6 +70,7 @@ while(i < length) {
         x : x,
         y : y,
         width : width,
+        height : Math.floor(pixels.length / width),
         pixels : pixels,
         behaviors : behaviors
     });
@@ -61,27 +80,53 @@ while(i < length) {
     i++;
 }
 
-for(i = 0; i < entities.length; i++) {
-    var entity = entities[i];
-    for(var j = 0; j < entity.pixels.length; j++) {
-        pixelOn(entity.x + (j % entity.width), entity.y + Math.floor(j / entity.width), entity.pixels[j]);
+var draw = function() {
+    for(i = 0; i < 256; i++) {
+        pixelOff(Math.floor(i / 16), i%16);
     }
-}
+    for(i = 0; i < entities.length; i++) {
+        var entity = entities[i];
+        for(var j = 0; j < entity.pixels.length; j++) {
+            pixelOn(entity.x + (j % entity.width), entity.y + Math.floor(j / entity.width), entity.pixels[j]);
+        }
+    }
+};
 
 
 // Draw pixels
+var interval = setInterval(function() {
+    entities.forEach(function(entity) {
+        entity.behaviors.forEach(function(behavior) {
+            var beh = _BEHAVIORS[parseInt(behavior, 16)];
+            if(beh) { // Remove this condition after all are implemented
+                if(beh.tick) {
+                    beh.tick.call(entity);
+                }
+            }
+            if(entity.x < 0 || // Check for OOB entity
+                entity.y < 0 ||
+                entity.x + entity.width > 16 ||
+                entity.y + entity.height > 16) {
+                //debugger;
+                entity.dead = true;
+            }
 
-
-//////
-// var a = true;
-// setInterval(function() {
-//     console.log("Tick!");
-//     if(a) {
-//         pixelOn(0, 0, 4);
-//         pixelOff(1, 1);
-//     } else {
-//         pixelOff(0, 0);
-//         pixelOn(1, 1, 3);
-//     }
-//     a = !a;
-// }, 1000);
+            // Dead objects check
+            if(entity.dead) {
+                if(parseInt(behavior, 16) === 0x1F) { // Lose on die
+                    gameState = false;
+                } else if(parseInt(behavior, 16) === 0x20) {// Win on die
+                    gameState = true;
+                }
+            }
+        })
+    });
+    draw();
+    if(gameState === true) {
+        console.log("You win!");
+        clearInterval(interval);
+    } else if(gameState === false) {
+        console.log("You lose!");
+        clearInterval(interval);
+    }
+}, 1000);
