@@ -2,14 +2,20 @@ var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
 var colors = [null, 'black', 'white', 'blue', 'red', 'green']; //...
-var pixelOn = function(x, y, colorCode) {
+
+var cycleArray;
+var pixelOn = function(x, y, colorCode, entity) {
     ctx.fillStyle = colors[colorCode];
-    ctx.fillRect(x*16, y*16, 16, 16);
+    ctx.fillRect(x * 16, y * 16, 16, 16);
+    var was = cycleArray[x * 16 + y];
+    cycleArray[x * 16 + y] = entity;
+    return was;
 };
 
 var pixelOff = function(x, y) {
     ctx.fillStyle = bgColor;
     ctx.fillRect(x*16, y*16, 16, 16);
+    cycleArray[x * 16 + y] = null;
 };
 
 var program = '2|31211-001320|1E3333-0E1E1F';
@@ -80,21 +86,29 @@ while(i < length) {
     i++;
 }
 
-var draw = function() {
+var clear = function() {
     for(i = 0; i < 256; i++) {
         pixelOff(Math.floor(i / 16), i%16);
     }
-    for(i = 0; i < entities.length; i++) {
-        var entity = entities[i];
-        for(var j = 0; j < entity.pixels.length; j++) {
-            pixelOn(entity.x + (j % entity.width), entity.y + Math.floor(j / entity.width), entity.pixels[j]);
-        }
+    console.log("Cleaned!");
+}
+var draw = function(entity, callback) {
+    for(var j = 0; j < entity.pixels.length; j++) {
+        var collision = pixelOn(
+            entity.x + (j % entity.width),
+            entity.y + Math.floor(j / entity.width),
+            entity.pixels[j],
+            entity
+        );
+        callback(collision);
     }
 };
 
 
 // Draw pixels
 var interval = setInterval(function() {
+    cycleArray = [];
+    clear();
     entities.forEach(function(entity) {
         entity.behaviors.forEach(function(behavior) {
             var beh = _BEHAVIORS[parseInt(behavior, 16)];
@@ -120,8 +134,12 @@ var interval = setInterval(function() {
                 }
             }
         })
+        draw(entity, function(collision) {
+            if(collision) {
+                console.log('collision!', collision);
+            }
+        });
     });
-    draw();
     if(gameState === true) {
         console.log("You win!");
         clearInterval(interval);
