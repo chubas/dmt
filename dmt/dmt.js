@@ -50,7 +50,7 @@ ctx.fillStyle = bgColor;
 ctx.fillRect(0, 0, 256, 256);
 var entities = [];
 var i = 2;
-while(i < length) {
+while(i < length) { //
 
     var x = hexValueAt(i++);
     console.log(i, x)
