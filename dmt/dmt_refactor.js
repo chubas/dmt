@@ -103,16 +103,30 @@ Class('Game')({
 
     BEHAVIORS : [],
 
+    KEYS : {
+        37 : 'LEFT',
+        39 : 'RIGHT'
+    },
+
     prototype : {
 
         program : null,
+
         _screen : null,
-        state : null, // Indicates end of game
+        _state : null, // Indicates end of game
+
+        // Regenerated each cycle
+        _cycleEntites : [],
+        _cycleInputs : {},
 
         init : function(program) {
             this.program = program;
             this._gameDefinition = Parser.parse(this.program);
-            this._screen = new Screen(document.getElementById('canvas'), this._gameDefinition.bgColorCode);
+            this._canvas = document.getElementById('canvas');
+            this._screen = new Screen(this._canvas, this._gameDefinition.bgColorCode);
+            this._prepareKeyListeners();
+            this._cycleInputs = {};
+            this._cycleEntites = [];
             console.log(this);
         },
 
@@ -124,10 +138,54 @@ Class('Game')({
             clearInterval(this.tick);
         },
 
+        _prepareKeyListeners : function() {
+            var game = this;
+            document.body.focus();
+            document.body.addEventListener('keydown', function(event) {
+                game._keyPressed(event.keyCode);
+            });
+            document.body.addEventListener('keyup', function(event) {
+                game._keyReleased(event.keyCode);
+            });
+        },
+
+        _keyPressed : function(keyCode) {
+            if(Game.KEYS[keyCode]) {
+                this._cycleInputs[Game.KEYS[keyCode]] = true;
+            }
+        },
+
+        _keyReleased : function(keyCode) {
+            // if(Game.KEYS[keyCode]) {
+            //     delete this._cycleInputs[Game.KEYS[keyCode]];
+            //     console.log("RELEASE", keyCode, this._cycleInputs);
+            // }
+        },
+
+        _checkInputActions : function(entity) {
+            var game = this;
+            entity.behaviors.forEach(function(behaviorCode) {
+                var behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+                if(behavior && behavior.input) {
+                    behavior.input.call(entity, Object.keys(game._cycleInputs));
+                }
+            })
+        },
+
         _gameCycle : function() {
             var game = this;
             game._screen.clear();
+
             game._cycleEntites = [];
+
+            this._gameDefinition.entities.forEach(function(entity) {
+                // First priority is input at the beginning of each action
+                game._checkInputActions(entity);
+            });
+
+            // Prepare capture for this tick
+            game._cycleInputs = [];
+
             this._gameDefinition.entities.forEach(function(entity) {
                 entity.behaviors.forEach(function(behaviorCode) {
                     var behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
@@ -139,11 +197,9 @@ Class('Game')({
                         }
                     }
                 });
-
             });
 
             this._gameDefinition.entities.forEach(function(entity) {
- 
                 // If any pixel is out, consider it dead for OOB
                 if(entity.x < 0 ||
                     entity.y < 0 ||
@@ -154,28 +210,26 @@ Class('Game')({
 
                 // Collision check
                 game._collisionCheck(entity);
-
             });
 
             this._gameDefinition.entities.forEach(function(entity) {
-
                 // Dead objects check
                 if(entity.dead) {
                     console.log("Entity is dead", entity);
                     if(entity.hasBehavior('1F')) { // Lose on die
-                        game.state = false;
+                        game._state = false;
                     } else if(entity.hasBehavior('20')) { // Win on die
-                        game.state = true;
+                        game._state = true;
                     }
                 }
 
                 game._screen.draw(entity);
             });
 
-            if(game.state === true) {
+            if(game._state === true) {
                 console.log("You win!");
                 game.stop();
-            } else if(game.state === false) {
+            } else if(game._state === false) {
                 console.log("You lose!");
                 game.stop();
             }
@@ -214,7 +268,22 @@ Class('Game')({
 Game.BEHAVIORS[0x00] = { // Hurts
 };
 
-Game.BEHAVIORS[0x0E] = { // Move horizontal, TBI
+Game.BEHAVIORS[0x0E] = { // Move horizontal
+    input : function(pressedKeys) {
+        // TODO: Make an input dictionary
+        var isPressingLeft = pressedKeys.indexOf('LEFT') !== -1;
+        var isPressingRight = pressedKeys.indexOf('RIGHT') !== -1;
+        if(isPressingLeft && !isPressingRight) { // Left but not both
+            if(this.x > 0) { // Do not go out of bounds
+                this.x -= 1;
+            }
+        }
+        if(isPressingRight && !isPressingLeft) { // Right but not both
+            if(this.x + this.width <= 15) { // Do not go out of bounds
+                this.x += 1;
+            }
+        }
+    }
 };
 
 Game.BEHAVIORS[0x1E] = { // Hurtable
