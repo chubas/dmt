@@ -2,10 +2,8 @@ Class('Parser')({
 
 
     parse : function(program) {
-        console.log("Parsing");
         var result = {};
         var hexValueAt = function(index) {
-            console.log("Hexvalue from", index)
             return parseInt(program[index], 16);
         }
 
@@ -20,7 +18,6 @@ Class('Parser')({
             width = hexValueAt(i++);
             pixels = [];
             behaviors = [];
-            console.log("XYW", x, y, width);
             while(program[i] !== '-' && i < program.length) {
                 pixels.push(program[i]);
                 i++
@@ -53,6 +50,10 @@ Class('Entity')({
             Object.keys(configuration).forEach(function(key) {
                 entity[key] = configuration[key];
             });
+        },
+
+        hasBehavior : function(behaviorCode) {
+            return this.behaviors.indexOf(behaviorCode) !== -1;
         }
     }
 });
@@ -105,20 +106,18 @@ Class('Game')({
     prototype : {
 
         program : null,
-        screen : null,
+        _screen : null,
         state : null, // Indicates end of game
 
         init : function(program) {
             this.program = program;
-            var gameDefinition = Parser.parse(this.program);
-            console.log(gameDefinition);
-            this._gameDefinition = gameDefinition; // REF:Remove var
-            this.screen = new Screen(document.getElementById('canvas'), gameDefinition.bgColorCode);
+            this._gameDefinition = Parser.parse(this.program);
+            this._screen = new Screen(document.getElementById('canvas'), this._gameDefinition.bgColorCode);
             console.log(this);
         },
 
         run : function() {
-            this.tick = setInterval(this._gameCycle.bind(this), 1000);
+            this.tick = setInterval(this._gameCycle.bind(this), 500);
         },
 
         stop : function() {
@@ -127,34 +126,52 @@ Class('Game')({
 
         _gameCycle : function() {
             var game = this;
-            game.screen.clear();
+            game._screen.clear();
+            game._cycleEntites = [];
             this._gameDefinition.entities.forEach(function(entity) {
                 entity.behaviors.forEach(function(behaviorCode) {
                     var behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+
+                    // Tick override check
                     if(behavior) {
                         if(behavior.tick) {
                             behavior.tick.call(entity);
                         }
                     }
-                    // Check for OutOfBounds Entity
-                    if(entity.x < 0 ||
-                        entity.y < 0 ||
-                        entity.x + entity.width > 16 ||
-                        entity.y + entity.height > 16) {
-                        entity.dead = true;
-                    }
-
-                    // Dead objects check
-                    if(entity.dead) {
-                        if(parseInt(behaviorCode, 16) === 0x1F) { // Lose on die
-                            game.state = false;
-                        } else if(parseInt(behaviorCode, 16) === 0x20) { // Win on die
-                            game.state = true;
-                        }
-                    }
                 });
-                game.screen.draw(entity);
+
             });
+
+            this._gameDefinition.entities.forEach(function(entity) {
+ 
+                // If any pixel is out, consider it dead for OOB
+                if(entity.x < 0 ||
+                    entity.y < 0 ||
+                    entity.x + entity.width > 16 ||
+                    entity.y + entity.height > 16) {
+                    entity.dead = true;
+                }
+
+                // Collision check
+                game._collisionCheck(entity);
+
+            });
+
+            this._gameDefinition.entities.forEach(function(entity) {
+
+                // Dead objects check
+                if(entity.dead) {
+                    console.log("Entity is dead", entity);
+                    if(entity.hasBehavior('1F')) { // Lose on die
+                        game.state = false;
+                    } else if(entity.hasBehavior('20')) { // Win on die
+                        game.state = true;
+                    }
+                }
+
+                game._screen.draw(entity);
+            });
+
             if(game.state === true) {
                 console.log("You win!");
                 game.stop();
@@ -162,20 +179,68 @@ Class('Game')({
                 console.log("You lose!");
                 game.stop();
             }
+        },
+
+        _collisionCheck : function(entity) {
+            var index, other, x, y;
+            for(var i = 0; i < entity.pixels.length; i++) {
+                x = entity.x + (i % entity.width);
+                y = entity.y + Math.floor(i / entity.width);
+                index = x + (y * 16);
+                other = this._cycleEntites[index]
+                if(other) {
+                    var behavior;
+                    entity.behaviors.forEach(function(behaviorCode) {
+                        behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+                        if(behavior.collide) {
+                            behavior.collide.call(entity, other);
+                        }
+                    });
+
+                    other.behaviors.forEach(function(behaviorCode) {
+                        behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+                        if(behavior.collide) {
+                            behavior.collide.call(other, entity);
+                        }
+                    });
+
+                }
+                this._cycleEntites[index] = entity;
+            }
         }
     }
 });
-Game.BEHAVIORS[0x1E] = { // hurtable
-    collide : function(other) {
-        return is(other, 0) ?  1 : null;
-    }
+
+Game.BEHAVIORS[0x00] = { // Hurts
 };
-Game.BEHAVIORS[0x13] = { // Move down
-    tick : function() {
-        this.y += 1;
-        console.log("TICKED!");
+
+Game.BEHAVIORS[0x0E] = { // Move horizontal, TBI
+};
+
+Game.BEHAVIORS[0x1E] = { // Hurtable
+    collide : function(other) {
+        console.log("Calling collide", this, other);
+        var otherHurts = other.hasBehavior('00');
+        if(otherHurts) {
+            console.log("HURTED!")
+            this.dead = true;
+        }
     }
 };
 
-var game = new Game('2|31211-001320|1E3333-0E1E1F');
+Game.BEHAVIORS[0x13] = { // Move down
+    tick : function() {
+        this.y += 1;
+    }
+};
+
+Game.BEHAVIORS[0x1F] = { // Lose on die
+};
+
+Game.BEHAVIORS[0x20] = { // Win on die
+};
+
+
+// var game = new Game('2|31211-001320|1E3333-0E1E1F');
+var game = new Game('2|1E3333-0E1E1F|31211-001320');
 game.run();
