@@ -1,15 +1,61 @@
 Class('Entity')({
+
+    ACTIONS : ['collide', 'die', 'input', 'tick'],
+
     prototype : {
+
+        behaviors : null, // Holds the transformed behaviors
+
         init : function(configuration) {
             var entity = this;
+            var behavior;
             Object.keys(configuration).forEach(function(key) {
                 entity[key] = configuration[key];
             });
+
+            // Set up the behaviors
+            var behaviorMap = {};
+
+            Entity.ACTIONS.forEach(function(actionName) {
+                behaviorMap[actionName] = [];
+            });
+
+            this.behaviorCodes.forEach(function(code) {
+                behavior = BEHAVIORS[parseInt(code, 16)];
+                Entity.ACTIONS.forEach(function(actionName) {
+                    if(behavior[actionName]) {
+                        behaviorMap[actionName].push(behavior[actionName]);
+                    }
+                }); // TODO: Possibly iterations can be reduced by extending. Find correct data structure
+            });
+
+            this._behaviors = behaviorMap;
+
+            this._defineActions();
+            console.log("entity", this);
         },
 
         hasBehavior : function(behaviorCode) {
-            return this.behaviors.indexOf(behaviorCode) !== -1;
+            return this.behaviorCodes.indexOf(behaviorCode) !== -1;
+        },
+
+
+        // Makes this object acts as a command proxy for all the handlers,
+        // defined in the constant Entity.ACTIONS
+        _defineActions : function() {
+            var entity = this;
+            Entity.ACTIONS.forEach(function(actionName) {
+                entity[actionName] = function() {
+                    // Keep the reference, since arguments is scope variable
+                    var actionArguments = arguments;
+
+                    entity._behaviors[actionName].forEach(function(behavior) {
+                        behavior.apply(entity, actionArguments);
+                    });
+                }
+            });
         }
+
     }
 });
 
@@ -85,16 +131,6 @@ Class('Game')({
             // }
         },
 
-        _checkInputActions : function(entity) {
-            var game = this;
-            entity.behaviors.forEach(function(behaviorCode) {
-                var behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
-                if(behavior && behavior.input) {
-                    behavior.input.call(entity, Object.keys(game._cycleInputs));
-                }
-            })
-        },
-
         _gameCycle : function() {
             var game = this;
             game._screen.clear();
@@ -103,23 +139,14 @@ Class('Game')({
 
             this._gameDefinition.entities.forEach(function(entity) {
                 // First priority is input at the beginning of each action
-                game._checkInputActions(entity);
+                entity.input(Object.keys(game._cycleInputs));
             });
 
             // Prepare capture for this tick
             game._cycleInputs = [];
 
             this._gameDefinition.entities.forEach(function(entity) {
-                entity.behaviors.forEach(function(behaviorCode) {
-                    var behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
-
-                    // Tick override check
-                    if(behavior) {
-                        if(behavior.tick) {
-                            behavior.tick.call(entity);
-                        }
-                    }
-                });
+                entity.tick();
             });
 
             this._gameDefinition.entities.forEach(function(entity) {
@@ -136,7 +163,7 @@ Class('Game')({
             });
 
             this._gameDefinition.entities.forEach(function(entity) {
-                game._checkDeadEntity(entity);
+                entity.die(game);
             });
 
 
@@ -150,17 +177,6 @@ Class('Game')({
             }
         },
 
-        _checkDeadEntity : function(entity) {
-            var game = this;
-            var behavior;
-            entity.behaviors.forEach(function(behaviorCode) {
-                behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
-                if(behavior.die) {
-                    behavior.die.call(entity, game);
-                }
-            });
-        },
-
         _collisionCheck : function(entity) {
             var index, other, x, y;
             for(var i = 0; i < entity.pixels.length; i++) {
@@ -169,21 +185,8 @@ Class('Game')({
                 index = x + (y * 16);
                 other = this._cycleEntites[index]
                 if(other) {
-                    var behavior;
-                    entity.behaviors.forEach(function(behaviorCode) {
-                        behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
-                        if(behavior.collide) {
-                            behavior.collide.call(entity, other);
-                        }
-                    });
-
-                    other.behaviors.forEach(function(behaviorCode) {
-                        behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
-                        if(behavior.collide) {
-                            behavior.collide.call(other, entity);
-                        }
-                    });
-
+                    entity.collide(other);
+                    other.collide(entity);
                 }
                 this._cycleEntites[index] = entity;
             }

@@ -16,14 +16,14 @@ Class('Parser')({
             y = hexValueAt(i++);
             width = hexValueAt(i++);
             pixels = [];
-            behaviors = [];
+            behaviorCodes = [];
             while(program[i] !== '-' && i < program.length) {
                 pixels.push(program[i]);
                 i++
             }
             i++; // Skip the -
             while(program[i] !== '|' && i < program.length) {
-                behaviors.push(program.substring(i, i+2));
+                behaviorCodes.push(program.substring(i, i+2));
                 i = i + 2;
             }
             i++;
@@ -33,7 +33,7 @@ Class('Parser')({
                 width : width,
                 height : Math.floor(pixels.length / width),
                 pixels : pixels,
-                behaviors : behaviors
+                behaviorCodes : behaviorCodes
             }));
         }
         result.entities = entities;
