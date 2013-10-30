@@ -1,48 +1,3 @@
-Class('Parser')({
-
-
-    parse : function(program) {
-        var result = {};
-        var hexValueAt = function(index) {
-            return parseInt(program[index], 16);
-        }
-
-        result.bgColorCode = parseInt(program[0], 10); // Parse the first character as number
-
-        var i = 2; // Start after the separator following the bg color
-        var x, y, width, pixels, behaviors, entities, mapping;
-        entities = [];
-        while(i < program.length) {
-            x = hexValueAt(i++);
-            y = hexValueAt(i++);
-            width = hexValueAt(i++);
-            pixels = [];
-            behaviors = [];
-            while(program[i] !== '-' && i < program.length) {
-                pixels.push(program[i]);
-                i++
-            }
-            i++; // Skip the -
-            while(program[i] !== '|' && i < program.length) {
-                behaviors.push(program.substring(i, i+2));
-                i = i + 2;
-            }
-            i++;
-            entities.push(new Entity({
-                x : x,
-                y : y,
-                width : width,
-                height : Math.floor(pixels.length / width),
-                pixels : pixels,
-                behaviors : behaviors
-            }));
-        }
-        result.entities = entities;
-        return result;
-    }
-
-});
-
 Class('Entity')({
     prototype : {
         init : function(configuration) {
@@ -57,47 +12,6 @@ Class('Entity')({
         }
     }
 });
-
-Class('Screen')({
-
-    COLORS : [null, 'black', 'white', 'blue', 'red', 'green'],
-
-    prototype : {
-        init : function(canvas, bgColorCode) {
-            this._ctx = canvas.getContext('2d');
-            this._bgColorCode = bgColorCode;
-        },
-
-        clear : function() {
-            for(var i = 0; i < 256; i++) {
-                this.pixelOff(Math.floor(i / 16), i % 16);
-            }
-        },
-
-        pixelOn : function(x, y, colorCode) {
-            //console.log("Pixel on", x, y, colorCode);
-            this._ctx.fillStyle = Screen.COLORS[colorCode];
-            this._ctx.fillRect(x * 16, y * 16, 16, 16);
-        },
-
-        pixelOff : function(x, y) {
-            //console.log("Pixel off", x, y)
-            this._ctx.fillStyle = Screen.COLORS[this._bgColorCode];
-            this._ctx.fillRect(x * 16, y * 16, 16, 16);
-        },
-
-        draw : function(entity) {
-            for(var i = 0; i < entity.pixels.length; i++) {
-                this.pixelOn(
-                    entity.x + (i % entity.width),
-                    entity.y + Math.floor(i / entity.width),
-                    entity.pixels[i]
-                )
-            }
-        }
-    }
-});
-
 
 Class('Game')({
 
