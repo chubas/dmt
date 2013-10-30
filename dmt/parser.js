@@ -1,6 +1,5 @@
 Class('Parser')({
 
-
     parse : function(program) {
         var result = {};
         var hexValueAt = function(index) {

@@ -15,8 +15,6 @@ Class('Entity')({
 
 Class('Game')({
 
-    BEHAVIORS : [],
-
     WIN_STATE : 1,
     LOSE_STATE : 2,
 
@@ -90,7 +88,7 @@ Class('Game')({
         _checkInputActions : function(entity) {
             var game = this;
             entity.behaviors.forEach(function(behaviorCode) {
-                var behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+                var behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
                 if(behavior && behavior.input) {
                     behavior.input.call(entity, Object.keys(game._cycleInputs));
                 }
@@ -113,7 +111,7 @@ Class('Game')({
 
             this._gameDefinition.entities.forEach(function(entity) {
                 entity.behaviors.forEach(function(behaviorCode) {
-                    var behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+                    var behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
 
                     // Tick override check
                     if(behavior) {
@@ -156,7 +154,7 @@ Class('Game')({
             var game = this;
             var behavior;
             entity.behaviors.forEach(function(behaviorCode) {
-                behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+                behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
                 if(behavior.die) {
                     behavior.die.call(entity, game);
                 }
@@ -173,14 +171,14 @@ Class('Game')({
                 if(other) {
                     var behavior;
                     entity.behaviors.forEach(function(behaviorCode) {
-                        behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+                        behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
                         if(behavior.collide) {
                             behavior.collide.call(entity, other);
                         }
                     });
 
                     other.behaviors.forEach(function(behaviorCode) {
-                        behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+                        behavior = BEHAVIORS[parseInt(behaviorCode, 16)];
                         if(behavior.collide) {
                             behavior.collide.call(other, entity);
                         }

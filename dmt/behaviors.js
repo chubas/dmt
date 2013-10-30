@@ -1,7 +1,9 @@
-Game.BEHAVIORS[0x00] = { // Hurts
+BEHAVIORS = [];
+
+BEHAVIORS[0x00] = { // Hurts
 };
 
-Game.BEHAVIORS[0x0E] = { // Move horizontal
+BEHAVIORS[0x0E] = { // Move horizontal
     input : function(pressedKeys) {
         // TODO: Make an input dictionary
         var isPressingLeft = pressedKeys.indexOf('LEFT') !== -1;
@@ -19,7 +21,7 @@ Game.BEHAVIORS[0x0E] = { // Move horizontal
     }
 };
 
-Game.BEHAVIORS[0x1E] = { // Hurtable
+BEHAVIORS[0x1E] = { // Hurtable
     collide : function(other) {
         console.log("Calling collide", this, other);
         var otherHurts = other.hasBehavior('00');
@@ -30,13 +32,13 @@ Game.BEHAVIORS[0x1E] = { // Hurtable
     }
 };
 
-Game.BEHAVIORS[0x13] = { // Move down
+BEHAVIORS[0x13] = { // Move down
     tick : function() {
         this.y += 1;
     }
 };
 
-Game.BEHAVIORS[0x1F] = { // Lose on die
+BEHAVIORS[0x1F] = { // Lose on die
     die : function(game) {
         if(this.dead) {
             game.lose();
@@ -44,7 +46,7 @@ Game.BEHAVIORS[0x1F] = { // Lose on die
     }
 };
 
-Game.BEHAVIORS[0x20] = { // Win on die
+BEHAVIORS[0x20] = { // Win on die
     die : function(game) {
         if(this.dead) {
             game.win();
