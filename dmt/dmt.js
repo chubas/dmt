@@ -103,6 +103,9 @@ Class('Game')({
 
     BEHAVIORS : [],
 
+    WIN_STATE : 1,
+    LOSE_STATE : 2,
+
     KEYS : {
         37 : 'LEFT',
         39 : 'RIGHT'
@@ -136,6 +139,14 @@ Class('Game')({
 
         stop : function() {
             clearInterval(this.tick);
+        },
+
+        lose : function() {
+            this._state = this._state || Game.LOSE_STATE; // Win by default
+        },
+
+        win : function() {
+            this._state = Game.WIN_STATE;
         },
 
         _prepareKeyListeners : function() {
@@ -213,26 +224,29 @@ Class('Game')({
             });
 
             this._gameDefinition.entities.forEach(function(entity) {
-                // Dead objects check
-                if(entity.dead) {
-                    console.log("Entity is dead", entity);
-                    if(entity.hasBehavior('1F')) { // Lose on die
-                        game._state = false;
-                    } else if(entity.hasBehavior('20')) { // Win on die
-                        game._state = true;
-                    }
-                }
+                game._checkDeadEntity(entity);
+            });
 
+
+            this._gameDefinition.entities.forEach(function(entity) {
                 game._screen.draw(entity);
             });
 
-            if(game._state === true) {
-                console.log("You win!");
-                game.stop();
-            } else if(game._state === false) {
-                console.log("You lose!");
+            if(game._state) {
+                console.log(game._state === Game.WIN_STATE ? 'You win!' : 'You lose!');
                 game.stop();
             }
+        },
+
+        _checkDeadEntity : function(entity) {
+            var game = this;
+            var behavior;
+            entity.behaviors.forEach(function(behaviorCode) {
+                behavior = Game.BEHAVIORS[parseInt(behaviorCode, 16)];
+                if(behavior.die) {
+                    behavior.die.call(entity, game);
+                }
+            });
         },
 
         _collisionCheck : function(entity) {
@@ -304,9 +318,19 @@ Game.BEHAVIORS[0x13] = { // Move down
 };
 
 Game.BEHAVIORS[0x1F] = { // Lose on die
+    die : function(game) {
+        if(this.dead) {
+            game.lose();
+        }
+    }
 };
 
 Game.BEHAVIORS[0x20] = { // Win on die
+    die : function(game) {
+        if(this.dead) {
+            game.win();
+        }
+    }
 };
 
 
