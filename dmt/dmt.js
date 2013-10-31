@@ -1,10 +1,17 @@
 Class('Entity')({
 
-    ACTIONS : ['collide', 'die', 'input', 'tick'],
+    ACTIONS : ['collide', 'state', 'input', 'tick'],
 
     prototype : {
 
-        behaviors : null, // Holds the transformed behaviors
+        x : 0,
+        y : 0,
+        width : 0,
+        pixels : [],
+        behaviorCodes : [],
+
+
+        _behaviors : null,
 
         init : function(configuration) {
             var entity = this;
@@ -26,7 +33,8 @@ Class('Entity')({
                     if(behavior[actionName]) {
                         behaviorMap[actionName].push(behavior[actionName]);
                     }
-                }); // TODO: Possibly iterations can be reduced by extending. Find correct data structure
+                }); // TODO: Possibly iterations can be reduced by extending.
+                    // Find correct data structure
             });
 
             this._behaviors = behaviorMap;
@@ -66,7 +74,9 @@ Class('Game')({
 
     KEYS : {
         37 : 'LEFT',
-        39 : 'RIGHT'
+        38 : 'UP',
+        39 : 'RIGHT',
+        40 : 'DOWN'
     },
 
     prototype : {
@@ -86,7 +96,7 @@ Class('Game')({
             this._canvas = document.getElementById('canvas');
             this._screen = new Screen(this._canvas, this._gameDefinition.bgColorCode);
             this._prepareKeyListeners();
-            this._cycleInputs = {};
+            this._pressedKey = null;
             this._cycleEntites = [];
             console.log(this);
         },
@@ -113,22 +123,12 @@ Class('Game')({
             document.body.addEventListener('keydown', function(event) {
                 game._keyPressed(event.keyCode);
             });
-            document.body.addEventListener('keyup', function(event) {
-                game._keyReleased(event.keyCode);
-            });
         },
 
         _keyPressed : function(keyCode) {
             if(Game.KEYS[keyCode]) {
-                this._cycleInputs[Game.KEYS[keyCode]] = true;
+                this._pressedKey = Game.KEYS[keyCode]
             }
-        },
-
-        _keyReleased : function(keyCode) {
-            // if(Game.KEYS[keyCode]) {
-            //     delete this._cycleInputs[Game.KEYS[keyCode]];
-            //     console.log("RELEASE", keyCode, this._cycleInputs);
-            // }
         },
 
         _gameCycle : function() {
@@ -139,33 +139,25 @@ Class('Game')({
 
             this._gameDefinition.entities.forEach(function(entity) {
                 // First priority is input at the beginning of each action
-                entity.input(Object.keys(game._cycleInputs));
+                entity.input(game._pressedKey);
             });
 
             // Prepare capture for this tick
-            game._cycleInputs = [];
+            game._pressedKey = null;
 
             this._gameDefinition.entities.forEach(function(entity) {
                 entity.tick();
             });
 
             this._gameDefinition.entities.forEach(function(entity) {
-                // If any pixel is out, consider it dead for OOB
-                if(entity.x < 0 ||
-                    entity.y < 0 ||
-                    entity.x + entity.width > 16 ||
-                    entity.y + entity.height > 16) {
-                    entity.dead = true;
-                }
-
                 // Collision check
                 game._collisionCheck(entity);
             });
 
             this._gameDefinition.entities.forEach(function(entity) {
-                entity.die(game);
+                // Check game state
+                entity.state(game);
             });
-
 
             this._gameDefinition.entities.forEach(function(entity) {
                 game._screen.draw(entity);
