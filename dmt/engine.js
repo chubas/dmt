@@ -41,11 +41,11 @@ Class('Engine')({
         },
 
         lose : function() {
-            this._state = this._state || Game.LOSE_STATE; // Win by default
+            this._state = this._state || Engine.LOSE_STATE; // Win by default
         },
-        
+
         win : function() {
-            this._state = Game.WIN_STATE;
+            this._state = Engine.WIN_STATE;
         },
 
         _prepareKeyListeners : function() {
