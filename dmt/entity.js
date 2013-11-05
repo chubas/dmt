@@ -60,7 +60,7 @@ Class('Entity')({
                     entity._behaviors[actionName].forEach(function(behavior) {
                         behavior.apply(entity, actionArguments);
                     });
-                }
+                };
             });
         }
 

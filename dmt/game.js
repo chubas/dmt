@@ -8,4 +8,4 @@ Class('Game')({
             this._engine.run();
         }
     }
-})
+});

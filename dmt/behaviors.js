@@ -23,7 +23,7 @@ var move = function(expected, key, entity) {
                 break;
         }
     }
-}
+};
 
 BEHAVIORS = [];
 
@@ -31,16 +31,16 @@ BEHAVIORS[0x00] = { // Hurts
 };
 
 BEHAVIORS[0x01] = { // Not used
-}
+};
 
 BEHAVIORS[0x02] = { // Die on out of bounds
-    state : function(game) {
+    state : function(engine) {
         if(this.x < 0 || this.y < 0 ||
             this.x > 15 || this.y > 15) {
             this.dead = true;
         }
     }
-}
+};
 
 BEHAVIORS[0x03] = { // Controllable move down
     input : function(key) {
@@ -54,7 +54,7 @@ BEHAVIORS[0x04] = { // Controllable move up
     }
 };
 
-BEHAVIORS[0x06] = { // Controllable move right 
+BEHAVIORS[0x06] = { // Controllable move right
     input : function(key) {
         move('RIGHT', key, this);
     }
@@ -71,7 +71,7 @@ BEHAVIORS[0x1E] = { // Hurtable
         console.log("Calling collide", this, other);
         var otherHurts = other.hasBehavior('00');
         if(otherHurts) {
-            console.log("HURTED!")
+            console.log("HURTED!");
             this.dead = true;
         }
     }
@@ -87,20 +87,20 @@ BEHAVIORS[0x14] = { // Move up
     tick : function() {
         this.y -= 1;
     }
-}
+};
 
 BEHAVIORS[0x1F] = { // Lose on die
-    state : function(game) {
+    state : function(engine) {
         if(this.dead) {
-            game.lose();
+            engine.lose();
         }
     }
 };
 
 BEHAVIORS[0x20] = { // Win on die
-    state : function(game) {
+    state : function(engine) {
         if(this.dead) {
-            game.win();
+            engine.win();
         }
     }
 };

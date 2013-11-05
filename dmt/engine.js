@@ -58,7 +58,7 @@ Class('Engine')({
 
         _keyPressed : function(keyCode) {
             if(Engine.KEYS[keyCode]) {
-                this._pressedKey = Engine.KEYS[keyCode]
+                this._pressedKey = Engine.KEYS[keyCode];
             }
         },
 
@@ -106,7 +106,7 @@ Class('Engine')({
                 x = entity.x + (i % entity.width);
                 y = entity.y + Math.floor(i / entity.width);
                 index = x + (y * 16);
-                other = this._cycleEntites[index]
+                other = this._cycleEntites[index];
                 if(other) {
                     entity.collide(other);
                     other.collide(entity);

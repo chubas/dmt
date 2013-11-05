@@ -4,7 +4,7 @@ Class('Parser')({
         var result = {};
         var hexValueAt = function(index) {
             return parseInt(program[index], 16);
-        }
+        };
 
         result.bgColorCode = parseInt(program[0], 10); // Parse the first character as number
 
@@ -19,7 +19,7 @@ Class('Parser')({
             behaviorCodes = [];
             while(program[i] !== '-' && i < program.length) {
                 pixels.push(program[i]);
-                i++
+                i++;
             }
             i++; // Skip the -
             while(program[i] !== '|' && i < program.length) {
