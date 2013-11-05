@@ -32,7 +32,7 @@ Class('Screen')({
                     entity.x + (i % entity.width),
                     entity.y + Math.floor(i / entity.width),
                     entity.pixels[i]
-                )
+                );
             }
         }
     }

@@ -20,6 +20,7 @@ Class('Engine')({
         // Regenerated each cycle
         _cycleEntites : [],
         _cycleInputs : {},
+        speed : 200,
 
         init : function(program) {
             this.program = program;
@@ -33,7 +34,7 @@ Class('Engine')({
         },
 
         run : function() {
-            this.tick = setInterval(this._gameCycle.bind(this), 500);
+            this.tick = setInterval(this._gameCycle.bind(this), this.speed);
         },
 
         stop : function() {
@@ -95,7 +96,7 @@ Class('Engine')({
             });
 
             if(game._state) {
-                console.log(game._state === Game.WIN_STATE ? 'You win!' : 'You lose!');
+                console.log(game._state === Engine.WIN_STATE ? 'You win!' : 'You lose!');
                 game.stop();
             }
         },

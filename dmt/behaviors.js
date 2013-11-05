@@ -105,3 +105,7 @@ BEHAVIORS[0x20] = { // Win on die
     }
 };
 
+BEHAVIORS[0x25] = { // Solid object
+    // TBI
+};
+
