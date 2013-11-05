@@ -42,25 +42,25 @@ BEHAVIORS[0x02] = { // Die on out of bounds
     }
 }
 
-BEHAVIORS[0x03] = { // Move down
+BEHAVIORS[0x03] = { // Controllable move down
     input : function(key) {
         move('DOWN', key, this);
     }
 };
 
-BEHAVIORS[0x04] = { // Move up
+BEHAVIORS[0x04] = { // Controllable move up
     input : function(key) {
         move('UP', key, this);
     }
 };
 
-BEHAVIORS[0x06] = { // Move right 
+BEHAVIORS[0x06] = { // Controllable move right 
     input : function(key) {
         move('RIGHT', key, this);
     }
 };
 
-BEHAVIORS[0x0A] = { // Move left
+BEHAVIORS[0x0A] = { // Controllable move left
     input : function(key) {
         move('LEFT', key, this);
     }
@@ -82,6 +82,12 @@ BEHAVIORS[0x13] = { // Move down
         this.y += 1;
     }
 };
+
+BEHAVIORS[0x14] = { // Move up
+    tick : function() {
+        this.y -= 1;
+    }
+}
 
 BEHAVIORS[0x1F] = { // Lose on die
     state : function(game) {
